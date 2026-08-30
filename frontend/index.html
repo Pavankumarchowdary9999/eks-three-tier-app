@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Items Manager</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Items Manager</h1>
+
+        <div class="add-form">
+            <h2>Add New Item</h2>
+            <form id="itemForm">
+                <input type="text" id="itemName" placeholder="Enter item name" required>
+                <button type="submit">Add Item</button>
+            </form>
+            <p id="formMessage"></p>
+        </div>
+
+        <div class="items-list">
+            <h2>Items</h2>
+            <button id="refreshBtn" onclick="loadItems()">Refresh</button>
+            <ul id="itemsContainer"></ul>
+            <p id="loadingMessage">Loading items...</p>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
