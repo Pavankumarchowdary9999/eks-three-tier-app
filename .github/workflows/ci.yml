@@ -58,6 +58,13 @@ jobs:
         run: |
           ls -lh target/
           test -f target/app-0.0.1-SNAPSHOT.jar
+      - name: Debug GitHub OIDC context
+        run: |
+              echo "Repository: $GITHUB_REPOSITORY"
+              echo "Repository ID: ${{ github.repository_id }}"
+              echo "Repository Owner: ${{ github.repository_owner }}"
+              echo "Repository Owner ID: ${{ github.repository_owner_id }}"
+              echo "Ref: $GITHUB_REF"
 
 
   # =====================================================
