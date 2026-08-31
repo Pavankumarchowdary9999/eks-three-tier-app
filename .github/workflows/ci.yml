@@ -179,4 +179,90 @@ jobs:
           echo "Frontend image:"
           echo "$FRONTEND_IMAGE:$IMAGE_TAG"
           echo "======================================"
-        
+         # =====================================================
+  # UPDATE GITOPS REPOSITORY
+  # =====================================================
+
+  update-gitops:
+    name: Update GitOps Helm Values
+    runs-on: ubuntu-latest
+
+    needs:
+      - docker-build-push
+
+    permissions:
+      contents: read
+
+    steps:
+
+      - name: Checkout GitOps repository
+        uses: actions/checkout@v4
+        with:
+          repository: Pavankumarchowdary9999/eks-three-tier-gitops
+          token: ${{ secrets.GITOPS_TOKEN }}
+          path: gitops
+
+      - name: Update Helm image tags
+        working-directory: gitops
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import os
+
+          file = Path("helm/three-tier-app/values.yaml")
+
+          content = file.read_text()
+
+          image_tag = os.environ["IMAGE_TAG"]
+
+          content = content.replace(
+              'repository: 698387659728.dkr.ecr.ap-south-1.amazonaws.com/frontend',
+              'repository: 698387659728.dkr.ecr.ap-south-1.amazonaws.com/frontend'
+          )
+
+          content = content.replace(
+              'repository: 698387659728.dkr.ecr.ap-south-1.amazonaws.com/backend',
+              'repository: 698387659728.dkr.ecr.ap-south-1.amazonaws.com/backend'
+          )
+
+          lines = content.splitlines()
+
+          current_image = None
+
+          for i, line in enumerate(lines):
+
+              stripped = line.strip()
+
+              if stripped == "frontend:":
+                  current_image = "frontend"
+
+              elif stripped == "backend:":
+                  current_image = "backend"
+
+              elif current_image in ["frontend", "backend"] and stripped.startswith("tag:"):
+                  lines[i] = f'    tag: "{image_tag}"'
+                  current_image = None
+
+          file.write_text("\n".join(lines) + "\n")
+          PY
+
+      - name: Show GitOps changes
+        working-directory: gitops
+        run: |
+          git diff -- helm/three-tier-app/values.yaml
+
+      - name: Commit GitOps change
+        working-directory: gitops
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add helm/three-tier-app/values.yaml
+
+          git commit \
+            -m "Update application images to ${GITHUB_SHA}" \
+            || echo "No changes to commit"
+
+          git push
